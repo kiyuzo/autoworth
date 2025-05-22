@@ -1,7 +1,9 @@
+import Link from "next/link";
+
 const ResultPage = () => {
   return (
     <div
-      className="min-h-screen flex items-center justify-center"
+      className="min-h-screen flex items-center justify-center relative"
       style={{ backgroundColor: "rgba(143, 217, 251, 0.5)" }}
     >
       <div className="bg-[#D8F2FF] rounded-xl shadow-lg p-10 flex w-full max-w-6xl min-h-[60vh]">
@@ -19,6 +21,14 @@ const ResultPage = () => {
           </div>
         </div>
       </div>
+      {/* Arrow Button - fixed to bottom right of the screen */}
+      <Link
+        href="/trend"
+        className="fixed bottom-8 right-8 z-50"
+        aria-label="Go to trend"
+      >
+        <span className="text-4xl font-bold text-black">{'>'}</span>
+      </Link>
     </div>
   );
 };
