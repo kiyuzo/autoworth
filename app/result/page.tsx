@@ -1,6 +1,20 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import Link from "next/link";
 
-const ResultPage = () => {
+export default async function ResultPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl font-semibold text-gray-700">
+          You must be logged in to view this page.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div
       className="min-h-screen flex items-center justify-center relative"
@@ -32,5 +46,3 @@ const ResultPage = () => {
     </div>
   );
 };
-
-export default ResultPage;
