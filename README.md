@@ -1,125 +1,175 @@
-# AutoWorth - Car Value Predictor
+# AutoWorth - Car Price Prediction App
 
-A full-stack application that predicts car values using machine learning.
+A full-stack web application that predicts car prices using machine learning, built with Next.js frontend and Flask backend.
 
 ## Features
 
-- React/Next.js frontend with TypeScript
-- Flask backend with scikit-learn
-- Real-time car value predictions
-- Responsive design with Tailwind CSS
+- **User Authentication**: Register, login, and logout functionality
+- **Car Price Prediction**: ML-powered price predictions for vehicles
+- **Prediction History**: Track all your previous predictions
+- **Responsive Design**: Works on desktop and mobile devices
+- **Session Management**: Secure user sessions with Flask
+
+## Tech Stack
+
+### Frontend
+- **Next.js 15** - React framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **React Hooks** - State management
+
+### Backend
+- **Flask** - Python web framework
+- **SQLAlchemy** - Database ORM
+- **SQLite** - Database
+- **Pickle** - ML model serialization
+- **Flask-CORS** - Cross-origin resource sharing
+
+## Project Structure
+
+```
+y:\07\autoworthbackend\
+├── backend/
+│   ├── app.py              # Flask application
+│   └── autoworth.db        # SQLite database (created automatically)
+├── API/
+│   └── car_price_model.pkl # Machine learning model
+├── src/
+│   └── app/
+│       ├── layout.tsx      # Root layout
+│       ├── page.tsx        # Main page component
+│       └── globals.css     # Global styles
+├── package.json            # Dependencies
+├── next.config.ts          # Next.js configuration
+├── tailwind.config.js      # Tailwind configuration
+└── tsconfig.json          # TypeScript configuration
+```
 
 ## Setup Instructions
 
-### Backend Setup
+### Prerequisites
+- Node.js (v18 or higher)
+- Python (v3.8 or higher)
+- pip (Python package manager)
 
-1. Navigate to the backend directory:
+### 1. Install Dependencies
 
-   ```bash
-   cd backend
-   ```
+#### Frontend (Next.js)
+```bash
+npm install
+```
 
-2. Create a virtual environment:
+#### Backend (Flask)
+```bash
+cd backend
+pip install flask flask-sqlalchemy flask-cors werkzeug pickle
+```
 
-   ```bash
-   python -m venv venv
-   ```
+### 2. Place ML Model
+Place your trained model file as:
+```
+y:\07\autoworthbackend\API\car_price_model.pkl
+```
 
-3. Activate the virtual environment:
+### 3. Start the Application
 
-   ```bash
-   # Windows
-   venv\Scripts\activate
-   # macOS/Linux
-   source venv/bin/activate
-   ```
+#### Start Backend (Flask)
+```bash
+cd backend
+python app.py
+```
+Backend will run on http://localhost:5000
 
-4. Install dependencies:
+#### Start Frontend (Next.js)
+```bash
+npm run dev
+```
+Frontend will run on http://localhost:3000
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+## API Endpoints
 
-### Frontend Setup
+### Authentication
+- `POST /api/register` - Register new user
+- `POST /api/login` - User login
+- `POST /api/logout` - User logout
+- `GET /api/user` - Get current user info
 
-1. Install Node.js dependencies:
+### Predictions
+- `POST /api/predict` - Get car price prediction
+- `GET /api/history` - Get prediction history
 
-   ```bash
-   npm install
-   ```
-
-### Running the Application
-
-1. Start both frontend and backend:
-
-   ```bash
-   npm run dev:all
-   ```
-
-   Or run them separately:
-
-2. Start the backend (in one terminal):
-
-   ```bash
-   npm run backend
-   ```
-
-3. Start the frontend (in another terminal):
-
-   ```bash
-   npm run dev
-   ```
-
-The application will be available at:
-
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
+### Health Check
+- `GET /api/health` - Check API health
+- `GET /api/mock-predict` - Mock prediction for testing
 
 ## Usage
 
-1. Fill in the car details (make, model, year, mileage, condition)
-2. Click "Get Price Prediction"
-3. View the predicted value and confidence score
+1. **Register/Login**: Create an account or sign in
+2. **Enter Car Details**: Provide brand, model, trim, year, and mileage
+3. **Get Prediction**: Click to get AI-powered price prediction
+4. **View History**: See all your previous predictions
 
-## Technology Stack
+## Development
 
-- **Frontend**: Next.js, React, TypeScript, Tailwind CSS
-- **Backend**: Flask, scikit-learn, NumPy
-- **Development**: ESLint, PostCSS
-
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
+### Running in Development Mode
 ```bash
+# Start both frontend and backend
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev 
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Production Build
+```bash
+npm run build
+npm start
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create `.env.local` for frontend configuration:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
 
-## Learn More
+## Features in Detail
 
-To learn more about Next.js, take a look at the following resources:
+### Machine Learning Integration
+- Uses trained pickle model for price predictions
+- Fallback calculation when model unavailable
+- Enhanced fallback with brand-specific multipliers
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### User Management
+- Secure password hashing
+- Session-based authentication
+- User-specific prediction history
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Frontend Features
+- Responsive design with Tailwind CSS
+- Real-time form validation
+- Loading states and error handling
+- Clean, modern UI/UX
 
-## Deploy on Vercel
+## Troubleshooting
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Common Issues
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **CORS Errors**: Make sure Flask CORS is properly configured
+2. **Model Loading**: Ensure car_price_model.pkl is in the correct location
+3. **Port Conflicts**: Change ports in configuration if needed
+4. **Database Issues**: Delete autoworth.db to reset database
+
+### Development Tips
+- Use browser dev tools for debugging
+- Check Flask console for backend errors
+- Verify API endpoints with tools like Postman
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.

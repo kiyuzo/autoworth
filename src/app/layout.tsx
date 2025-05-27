@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "AutoWorth - Car Value Predictor",
-  description: "Predict your car's market value using machine learning",
+  title: 'AutoWorth - Car Price Predictor',
+  description: 'Get accurate car price predictions using machine learning',
 };
 
 export default function RootLayout({

@@ -1,179 +1,104 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-interface CarData {
-  make: string;
-  model: string;
-  year: number;
-  mileage: number;
-  condition: string;
+interface User {
+  id: number;
+  username: string;
+  email: string;
 }
 
-interface PredictionResponse {
-  predicted_price: number;
-  confidence: number;
+interface AuthResponse {
+  success: boolean;
+  user?: User;
+  message?: string;
+  error?: string;
 }
 
-export default function Home() {
-  const [formData, setFormData] = useState<CarData>({
-    make: '',
-    model: '',
-    year: new Date().getFullYear(),
-    mileage: 0,
-    condition: 'Good'
-  });
-  const [prediction, setPrediction] = useState<PredictionResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function HomePage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
+  // Check authentication status
+  const checkAuth = async () => {
     try {
-      const response = await fetch('/api/predict', {
-        method: 'POST',
+      const response = await fetch('http://localhost:5000/api/user', {
+        method: 'GET',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to get prediction');
+      
+      if (response.ok) {
+        const data: AuthResponse = await response.json();
+        if (data.success && data.user) {
+          setUser(data.user);
+          // Redirect authenticated users to predict page
+          router.push('/predict');
+        }
       }
-
-      const result: PredictionResponse = await response.json();
-      setPrediction(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Auth check error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'year' || name === 'mileage' ? parseInt(value) || 0 : value
-    }));
-  };
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is authenticated, they will be redirected above
+  // This shows the landing page for unauthenticated users
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Car Value Predictor
+    <div
+      className="min-h-screen flex items-center justify-center bg-cover bg-center"
+      style={{
+        backgroundImage: "url('/home-bg.png')",
+      }}
+    >
+      <div className="bg-white bg-opacity-95 rounded-lg shadow-lg p-8 w-full max-w-md text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">
+          Welcome to AutoWorth
         </h1>
+        <p className="text-gray-600 mb-8">
+          Get accurate car price predictions with our advanced AI model.
+        </p>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Make
-            </label>
-            <input
-              type="text"
-              name="make"
-              value={formData.make}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Model
-            </label>
-            <input
-              type="text"
-              name="model"
-              value={formData.model}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Year
-            </label>
-            <input
-              type="number"
-              name="year"
-              value={formData.year}
-              onChange={handleInputChange}
-              min="1990"
-              max={new Date().getFullYear()}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mileage
-            </label>
-            <input
-              type="number"
-              name="mileage"
-              value={formData.mileage}
-              onChange={handleInputChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Condition
-            </label>
-            <select
-              name="condition"
-              value={formData.condition}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Excellent">Excellent</option>
-              <option value="Good">Good</option>
-              <option value="Fair">Fair</option>
-              <option value="Poor">Poor</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+        <div className="space-y-4">
+          <Link
+            href="/login"
+            className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 block text-center"
           >
-            {loading ? 'Predicting...' : 'Get Price Prediction'}
-          </button>
-        </form>
-
-        {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-
-        {prediction && (
-          <div className="mt-6 p-4 bg-green-100 border border-green-400 rounded">
-            <h2 className="text-lg font-semibold text-green-800 mb-2">
-              Prediction Result
-            </h2>
-            <p className="text-green-700">
-              <strong>Estimated Value:</strong> ${prediction.predicted_price.toLocaleString()}
-            </p>
-            <p className="text-green-700">
-              <strong>Confidence:</strong> {(prediction.confidence * 100).toFixed(1)}%
-            </p>
-          </div>
-        )}
+            Sign In
+          </Link>
+          
+          <Link
+            href="/signup"
+            className="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 block text-center"
+          >
+            Sign Up
+          </Link>
+        </div>
+        
+        <p className="text-sm text-gray-500 mt-6">
+          Sign in to access the car price prediction tool
+        </p>
       </div>
     </div>
   );

@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently \"npm run dev:next\" \"npm run dev:api\"",
+    "dev:next": "next dev",
+    "dev:api": "cd backend && python app.py",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "backend": "cd backend && python app.py",
-    "dev:all": "concurrently \"npm run backend\" \"npm run dev\""
+    "lint": "next lint"
   },
   "dependencies": {
     "next": "15.3.2",
@@ -24,10 +24,10 @@
     "@types/react-dom": "^19.1.5",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
-    "autoprefixer": "^10.4.20",
-    "concurrently": "^9.1.0",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.1.2",
     "eslint": "^9.27.0",
-    "eslint-config-next": "15.3.2",
+    "eslint-config-next": "^15.3.2",
     "postcss": "^8.5.1",
     "tailwindcss": "^4.1.7",
     "typescript": "^5.7.3"

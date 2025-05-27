@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const LoginPage = () => {
+const SignUpPage = () => {
   const [darkMode, setDarkMode] = useState(false);
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -28,8 +30,16 @@ const LoginPage = () => {
     setError('');
 
     try {
-      if (!email || !password) {
-        throw new Error('Email and password are required');
+      if (!username || !email || !password || !confirmPassword) {
+        throw new Error('All fields are required');
+      }
+
+      if (password !== confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
       }
 
       // Simple email validation
@@ -39,59 +49,46 @@ const LoginPage = () => {
       }
 
       // Make actual API call to your backend
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch('http://localhost:5000/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({
-          username: email, // Using email as username for now
-          password: password
+          username,
+          email,
+          password
         }),
       });
 
       const data = await response.json();
       
       if (response.ok && data.success) {
-        // Successfully logged in, redirect to main page instead of predict page
+        // Successfully registered and logged in, redirect to main page
         router.push('/');
       } else {
-        setError(data.error || data.message || 'Login failed');
+        setError(data.error || data.message || 'Registration failed');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignUp = async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      // For now, simulate Google login - replace with actual Google OAuth
+      // For now, simulate Google signup - replace with actual Google OAuth
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Redirect to main page instead of predict page
+      // Redirect to main page
       router.push('/');
     } catch (err) {
-      setError('Google login failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGuestLogin = async () => {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      // Simply redirect to predicts page without API call
-      router.push('/predicts');
-    } catch (err) {
-      setError('Redirect failed');
+      setError('Google signup failed');
     } finally {
       setIsLoading(false);
     }
@@ -101,8 +98,11 @@ const LoginPage = () => {
     <div className={`min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className={`mt-6 text-center text-3xl font-extrabold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-          Welcome back
+          Create your account
         </h2>
+        <p className={`mt-2 text-center text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          Join us and start predicting car prices
+        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -114,6 +114,20 @@ const LoginPage = () => {
           )}
           
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <input
+                type="text"
+                placeholder="Full name"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={isLoading}
+                className={`appearance-none block w-full px-3 py-4 border ${
+                  darkMode 
+                    ? 'border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400' 
+                    : 'border-gray-300'
+                } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+              />
+            </div>
             <div>
               <input
                 type="email"
@@ -143,37 +157,35 @@ const LoginPage = () => {
               />
             </div>
             <div>
+              <input
+                type="password"
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isLoading}
+                className={`appearance-none block w-full px-3 py-4 border ${
+                  darkMode 
+                    ? 'border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400' 
+                    : 'border-gray-300'
+                } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+              />
+            </div>
+            <div>
               <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Signing in...' : 'Continue'}
+                {isLoading ? 'Creating account...' : 'Create Account'}
               </button>
             </div>
           </form>
           
           <div className={`mt-4 text-center text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="font-semibold" style={{ color: "#2F37AF" }}>
-              Sign Up
+            Already have an account?{' '}
+            <Link href="/login" className="font-semibold" style={{ color: "#2F37AF" }}>
+              Sign In
             </Link>
-          </div>
-          
-          {/* Guest Login Button */}
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={handleGuestLogin}
-              disabled={isLoading}
-              className={`w-full flex justify-center py-3 px-4 border-2 border-dashed ${
-                darkMode 
-                  ? 'border-gray-600 text-gray-300 hover:border-gray-500 hover:text-gray-200' 
-                  : 'border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-700'
-              } rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
-            >
-              {isLoading ? 'Continuing as guest...' : 'Continue as Guest'}
-            </button>
           </div>
           
           {/* Divider with OR */}
@@ -187,7 +199,7 @@ const LoginPage = () => {
           <div>
             <button
               type="button"
-              onClick={handleGoogleLogin}
+              onClick={handleGoogleSignUp}
               disabled={isLoading}
               className={`w-full flex items-center justify-between py-2 px-4 border ${
                 darkMode 
@@ -195,7 +207,7 @@ const LoginPage = () => {
                   : 'border-gray-300 bg-white'
               } rounded-md shadow-sm text-sm font-medium hover:bg-gray-50 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <span>{isLoading ? 'Signing in...' : 'Continue with Google'}</span>
+              <span>{isLoading ? 'Creating account...' : 'Continue with Google'}</span>
               {/* Google Icon */}
               <svg className="h-5 w-5 ml-2" viewBox="0 0 24 24">
                 <g>
@@ -207,10 +219,22 @@ const LoginPage = () => {
               </svg>
             </button>
           </div>
+
+          {/* Terms and Privacy */}
+          <div className={`mt-6 text-xs text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            By creating an account, you agree to our{' '}
+            <Link href="/terms" className="underline hover:text-indigo-600">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="underline hover:text-indigo-600">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default SignUpPage;
