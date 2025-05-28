@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "api:install": "cd api && pip install -r requirements.txt",
+    "api:dev": "python scripts/start-api.py",
+    "api:start": "cd api && python app.py",
+    "dev:all": "concurrently \"npm run api:dev\" \"npm run dev\"",
+    "setup": "npm install && npm run api:install"
   },
   "dependencies": {
     "react": "^19.0.0",
