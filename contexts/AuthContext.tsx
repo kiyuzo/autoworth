@@ -9,6 +9,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  dbUser: any;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,11 +24,49 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [dbUser, setDbUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Function to save/update user in database
+  const saveUserToDatabase = async (firebaseUser: User) => {
+    try {
+      const userData = {
+        firebaseUid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0]
+      };
+
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setDbUser(result.user);
+        console.log('User saved to database:', result.message);
+      } else {
+        console.error('Failed to save user to database');
+      }
+    } catch (error) {
+      console.error('Error saving user to database:', error);
+    }
+  };
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      
+      if (firebaseUser) {
+        // Save/update user in database when they sign in
+        await saveUserToDatabase(firebaseUser);
+      } else {
+        setDbUser(null);
+      }
+      
       setLoading(false);
     });
 
@@ -36,7 +75,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      // User will be automatically saved to database via onAuthStateChanged
     } catch (error) {
       console.error('Error signing in with Google:', error);
     }
@@ -45,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
+      setDbUser(null);
       // Force redirect to login page after logout
       window.location.href = '/login';
     } catch (error) {
@@ -57,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signInWithGoogle,
     logout,
+    dbUser,
   };
 
   return (
