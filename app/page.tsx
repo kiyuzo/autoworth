@@ -12,13 +12,14 @@ interface Brand {
 interface Model {
   id: number;
   name: string;
-  brand_id: number;
+  brand_name: string;
 }
 
 interface Trim {
   id: number;
   name: string;
-  model_id: number;
+  brand_name: string;
+  model_name: string;
 }
 
 export default function Home() {
@@ -58,7 +59,7 @@ export default function Home() {
   // Fetch models when brand changes
   useEffect(() => {
     if (brand) {
-      fetchModels(brand.id);
+      fetchModels(brand.name);
     } else {
       setModels([]);
     }
@@ -69,41 +70,53 @@ export default function Home() {
 
   // Fetch trims when model changes
   useEffect(() => {
-    if (model) {
-      fetchTrims(model.id);
+    if (model && brand) {
+      fetchTrims(brand.name, model.name);
     } else {
       setTrims([]);
     }
     setTrim(null);
-  }, [model]);
+  }, [model, brand]);
 
   const fetchBrands = async () => {
     try {
-      const response = await fetch('/api/brands');
+      const response = await fetch('/api/cars?type=brands');
+      if (!response.ok) {
+        throw new Error('Failed to fetch brands');
+      }
       const data = await response.json();
-      setBrands(data);
+      setBrands(data || []);
     } catch (error) {
       console.error('Error fetching brands:', error);
+      setBrands([]);
     }
   };
 
-  const fetchModels = async (brandId: number) => {
+  const fetchModels = async (brandName: string) => {
     try {
-      const response = await fetch(`/api/models?brandId=${brandId}`);
+      const response = await fetch(`/api/cars?type=models&brand=${encodeURIComponent(brandName)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch models');
+      }
       const data = await response.json();
-      setModels(data);
+      setModels(data || []);
     } catch (error) {
       console.error('Error fetching models:', error);
+      setModels([]);
     }
   };
 
-  const fetchTrims = async (modelId: number) => {
+  const fetchTrims = async (brandName: string, modelName: string) => {
     try {
-      const response = await fetch(`/api/trims?modelId=${modelId}`);
+      const response = await fetch(`/api/cars?type=trims&brand=${encodeURIComponent(brandName)}&model=${encodeURIComponent(modelName)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch trims');
+      }
       const data = await response.json();
-      setTrims(data);
+      setTrims(data || []);
     } catch (error) {
       console.error('Error fetching trims:', error);
+      setTrims([]);
     }
   };
 
