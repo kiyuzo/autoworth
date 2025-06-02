@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../contexts/AuthContext'; // ADD THIS LINE
 import { predictCarPrice, PredictionRequest } from '../api/carPrediction';
 
 interface Brand {
@@ -24,6 +25,8 @@ interface Trim {
 
 export default function Home() {
   const router = useRouter();
+  const { dbUser } = useAuth(); // ADD THIS LINE
+
   const [brand, setBrand] = useState<Brand | null>(null);
   const [model, setModel] = useState<Model | null>(null);
   const [trim, setTrim] = useState<Trim | null>(null);
@@ -171,7 +174,8 @@ export default function Home() {
         model: model.name,
         trim: trim.name,
         year: yearNum,
-        mileage: mileageNum
+        mileage: mileageNum,
+        userId: dbUser?.user_id // ADD THIS LINE ONLY
       };
 
       const result = await predictCarPrice(predictionData);
