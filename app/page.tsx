@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext'; // ADD THIS LINE
+import { useAuth } from '../contexts/AuthContext';
 import { predictCarPrice, PredictionRequest } from '../api/carPrediction';
 
 interface Brand {
@@ -25,7 +25,7 @@ interface Trim {
 
 export default function Home() {
   const router = useRouter();
-  const { dbUser } = useAuth(); // ADD THIS LINE
+  const { dbUser } = useAuth();
 
   const [brand, setBrand] = useState<Brand | null>(null);
   const [model, setModel] = useState<Model | null>(null);
@@ -50,9 +50,9 @@ export default function Home() {
   const [error, setError] = useState("");
 
   // Refs for blur handling
-  const brandDropdownRef = useRef<HTMLDivElement>(null);
-  const modelDropdownRef = useRef<HTMLDivElement>(null);
-  const trimDropdownRef = useRef<HTMLDivElement>(null);
+  const brandDropdownRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+  const modelDropdownRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+  const trimDropdownRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
 
   // Fetch brands on component mount
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function Home() {
   );
 
   // Helper for blur: close dropdown only if click is outside
-  const handleBlur = (ref: React.RefObject<HTMLDivElement>, setShow: (v: boolean) => void) => (e: React.FocusEvent) => {
+  const handleBlur = (ref: React.RefObject<HTMLDivElement>, setShow: (v: boolean) => void) => () => {
     setTimeout(() => {
       if (ref.current && !ref.current.contains(document.activeElement)) {
         setShow(false);
@@ -194,169 +194,188 @@ export default function Home() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center"
-      style={{
-        backgroundImage: "url('/home-bg.png')",
-      }}
-    >
-      <div className="bg-white bg-opacity-95 rounded-lg shadow-lg p-8 w-full max-w-2xl">
-        <form onSubmit={handleSubmit} className="flex flex-col space-y-5">
-          {error && (
-            <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-md">
-              {error}
-            </div>
-          )}
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+      <div className="w-full max-w-7xl px-8 flex items-center gap-16">
+        {/* Form Section - Left Side on desktop, full width on mobile */}
+        <div className="w-full lg:w-1/2">
+          <div className="bg-white bg-opacity-95 rounded-lg shadow-lg p-8 w-full">
+            <form onSubmit={handleSubmit} className="flex flex-col space-y-5">
+              {error && (
+                <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-md">
+                  {error}
+                </div>
+              )}
 
-          {/* Car Brand Dropdown */}
-          <div ref={brandDropdownRef} tabIndex={-1} onBlur={handleBlur(brandDropdownRef, setShowBrandDropdown)}>
-            <input
-              type="text"
-              placeholder="Car brand..."
-              value={brandInput}
-              onFocus={() => setShowBrandDropdown(true)}
-              onChange={(e) => {
-                setBrandInput(e.target.value);
-                setBrand(null);
-                setModel(null);
-                setTrim(null);
-                setModelInput("");
-                setTrimInput("");
-                setShowBrandDropdown(true);
-              }}
-              className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-            {showBrandDropdown && brandInput && (
-              <ul className="border border-gray-300 rounded-md bg-white mt-1 max-h-40 overflow-y-auto z-10 absolute w-full">
-                {filteredBrands.length === 0 && (
-                  <li className="px-3 py-2 text-gray-400">No brands found</li>
+              {/* Car Brand Dropdown */}
+              <div ref={brandDropdownRef} tabIndex={-1} onBlur={handleBlur(brandDropdownRef, setShowBrandDropdown)} className="relative">
+                <input
+                  type="text"
+                  placeholder="Car brand"
+                  value={brandInput}
+                  onFocus={() => setShowBrandDropdown(true)}
+                  onChange={(e) => {
+                    setBrandInput(e.target.value);
+                    setBrand(null);
+                    setModel(null);
+                    setTrim(null);
+                    setModelInput("");
+                    setTrimInput("");
+                    setShowBrandDropdown(true);
+                  }}
+                  className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-black focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+                {showBrandDropdown && brandInput && (
+                  <ul className="border border-gray-300 rounded-md bg-white mt-1 max-h-40 overflow-y-auto z-10 absolute w-full left-0">
+                    {filteredBrands.length === 0 && (
+                      <li className="px-3 py-2 text-gray-400">No brands found</li>
+                    )}
+                    {filteredBrands.map((b) => (
+                      <li
+                        key={b.id}
+                        className="px-3 py-2 hover:bg-indigo-100 cursor-pointer text-black"
+                        onMouseDown={() => {
+                          setBrand(b);
+                          setBrandInput(b.name);
+                          setModel(null);
+                          setTrim(null);
+                          setModelInput("");
+                          setTrimInput("");
+                          setShowBrandDropdown(false);
+                        }}
+                      >
+                        {b.name}
+                      </li>
+                    ))}
+                  </ul>
                 )}
-                {filteredBrands.map((b) => (
-                  <li
-                    key={b.id}
-                    className="px-3 py-2 hover:bg-indigo-100 cursor-pointer"
-                    onMouseDown={() => {
-                      setBrand(b);
-                      setBrandInput(b.name);
-                      setModel(null);
-                      setTrim(null);
-                      setModelInput("");
-                      setTrimInput("");
-                      setShowBrandDropdown(false);
-                    }}
-                  >
-                    {b.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+              </div>
 
-          {/* Car Model Dropdown */}
-          <div ref={modelDropdownRef} tabIndex={-1} onBlur={handleBlur(modelDropdownRef, setShowModelDropdown)}>
-            <input
-              type="text"
-              placeholder="Car model..."
-              value={modelInput}
-              onFocus={() => setShowModelDropdown(true)}
-              onChange={(e) => {
-                setModelInput(e.target.value);
-                setModel(null);
-                setTrim(null);
-                setTrimInput("");
-                setShowModelDropdown(true);
-              }}
-              disabled={!brand}
-              className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-100"
-            />
-            {brand && showModelDropdown && modelInput && (
-              <ul className="border border-gray-300 rounded-md bg-white mt-1 max-h-40 overflow-y-auto z-10 absolute w-full">
-                {filteredModels.length === 0 && (
-                  <li className="px-3 py-2 text-gray-400">No models found</li>
+              {/* Car Model Dropdown */}
+              <div ref={modelDropdownRef} tabIndex={-1} onBlur={handleBlur(modelDropdownRef, setShowModelDropdown)} className="relative">
+                <input
+                  type="text"
+                  placeholder="Car model"
+                  value={modelInput}
+                  onFocus={() => setShowModelDropdown(true)}
+                  onChange={(e) => {
+                    setModelInput(e.target.value);
+                    setModel(null);
+                    setTrim(null);
+                    setTrimInput("");
+                    setShowModelDropdown(true);
+                  }}
+                  disabled={!brand}
+                  className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-black focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-100"
+                />
+                {brand && showModelDropdown && modelInput && (
+                  <ul className="border border-gray-300 rounded-md bg-white mt-1 max-h-40 overflow-y-auto z-10 absolute w-full left-0">
+                    {filteredModels.length === 0 && (
+                      <li className="px-3 py-2 text-gray-400">No models found</li>
+                    )}
+                    {filteredModels.map((m) => (
+                      <li
+                        key={m.id}
+                        className="px-3 py-2 hover:bg-indigo-100 cursor-pointer text-black"
+                        onMouseDown={() => {
+                          setModel(m);
+                          setModelInput(m.name);
+                          setTrim(null);
+                          setTrimInput("");
+                          setShowModelDropdown(false);
+                        }}
+                      >
+                        {m.name}
+                      </li>
+                    ))}
+                  </ul>
                 )}
-                {filteredModels.map((m) => (
-                  <li
-                    key={m.id}
-                    className="px-3 py-2 hover:bg-indigo-100 cursor-pointer"
-                    onMouseDown={() => {
-                      setModel(m);
-                      setModelInput(m.name);
-                      setTrim(null);
-                      setTrimInput("");
-                      setShowModelDropdown(false);
-                    }}
-                  >
-                    {m.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+              </div>
 
-          {/* Car Trim Dropdown */}
-          <div ref={trimDropdownRef} tabIndex={-1} onBlur={handleBlur(trimDropdownRef, setShowTrimDropdown)}>
-            <input
-              type="text"
-              placeholder="Car Trim..."
-              value={trimInput}
-              onFocus={() => setShowTrimDropdown(true)}
-              onChange={(e) => {
-                setTrimInput(e.target.value);
-                setTrim(null);
-                setShowTrimDropdown(true);
-              }}
-              disabled={!model}
-              className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-100"
-            />
-            {model && showTrimDropdown && trimInput && (
-              <ul className="border border-gray-300 rounded-md bg-white mt-1 max-h-40 overflow-y-auto z-10 absolute w-full">
-                {filteredTrims.length === 0 && (
-                  <li className="px-3 py-2 text-gray-400">No trims found</li>
+              {/* Car Trim Dropdown */}
+              <div ref={trimDropdownRef} tabIndex={-1} onBlur={handleBlur(trimDropdownRef, setShowTrimDropdown)} className="relative">
+                <input
+                  type="text"
+                  placeholder="Car Trim"
+                  value={trimInput}
+                  onFocus={() => setShowTrimDropdown(true)}
+                  onChange={(e) => {
+                    setTrimInput(e.target.value);
+                    setTrim(null);
+                    setShowTrimDropdown(true);
+                  }}
+                  disabled={!model}
+                  className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-black focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-100"
+                />
+                {model && showTrimDropdown && trimInput && (
+                  <ul className="border border-gray-300 rounded-md bg-white mt-1 max-h-40 overflow-y-auto z-10 absolute w-full left-0">
+                    {filteredTrims.length === 0 && (
+                      <li className="px-3 py-2 text-gray-400">No trims found</li>
+                    )}
+                    {filteredTrims.map((t) => (
+                      <li
+                        key={t.id}
+                        className="px-3 py-2 hover:bg-indigo-100 cursor-pointer text-black"
+                        onMouseDown={() => {
+                          setTrim(t);
+                          setTrimInput(t.name);
+                          setShowTrimDropdown(false);
+                        }}
+                      >
+                        {t.name}
+                      </li>
+                    ))}
+                  </ul>
                 )}
-                {filteredTrims.map((t) => (
-                  <li
-                    key={t.id}
-                    className="px-3 py-2 hover:bg-indigo-100 cursor-pointer"
-                    onMouseDown={() => {
-                      setTrim(t);
-                      setTrimInput(t.name);
-                      setShowTrimDropdown(false);
-                    }}
-                  >
-                    {t.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+              </div>
 
-          {/* Year and Mileage */}
-          <input
-            type="number"
-            placeholder="Year..."
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            min="1900"
-            max={new Date().getFullYear() + 1}
-            className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-          <input
-            type="number"
-            placeholder="Mileage..."
-            value={mileage}
-            onChange={(e) => setMileage(e.target.value)}
-            min="0"
-            className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-          
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              {/* Year and Mileage */}
+              <input
+                type="number"
+                placeholder="Year"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                min="1900"
+                max={new Date().getFullYear() + 1}
+                className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-black focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              <input
+                type="number"
+                placeholder="Mileage"
+                value={mileage}
+                onChange={(e) => setMileage(e.target.value)}
+                min="0"
+                className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-black focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow text-sm font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#001233' }}
+              >
+                {isLoading ? 'Calculating...' : "See your car's value"}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Catchline Section - Right Side, hidden on mobile */}
+        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center pl-8">
+          <h1 className="text-6xl font-bold mb-6 leading-tight">
+            <span style={{ color: 'var(--text-primary)' }}>
+              Accurate car valuation{' '}
+            </span>
+            <span style={{ color: 'var(--text-accent)' }}>
+              instantly
+            </span>
+          </h1>
+          <p 
+            className="text-xl font-medium"
+            style={{ color: 'var(--text-secondary)' }}
           >
-            {isLoading ? 'Calculating...' : 'Calculate Best Price'}
-          </button>
-        </form>
+            Fill in your car&apos;s details
+          </p>
+        </div>
       </div>
     </div>
   );
