@@ -52,9 +52,9 @@ export const predictCarPrice = async (data: PredictionRequest): Promise<Predicti
             brand: data.brand,
             model: data.model,
             trim: data.trim,
-            year: data.year,
-            mileage: data.mileage,
-            estimatedPrice: predictionResult.predicted_price
+            year: Number(data.year), // Ensure it's a number
+            mileage: Number(data.mileage), // Ensure it's a number
+            estimatedPrice: Number(predictionResult.predicted_price) // Ensure it's a number
           }),
         });
 
@@ -69,7 +69,6 @@ export const predictCarPrice = async (data: PredictionRequest): Promise<Predicti
         }
       } catch (saveError) {
         console.error('Error saving valuation to database:', saveError);
-        // Don't throw error here - prediction still worked
       }
     }
 

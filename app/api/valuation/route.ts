@@ -8,9 +8,25 @@ export async function POST(request: Request) {
 
     console.log('Received valuation data:', { userId, brand, model, trim, year, mileage, estimatedPrice });
 
-    if (!userId || !brand || !model || !trim || !year || !mileage || !estimatedPrice) {
+    // Updated validation to properly handle 0 values
+    if (!userId || !brand || !model || !trim || year == null || mileage == null || !estimatedPrice) {
       return NextResponse.json(
         { error: 'All fields are required' },
+        { status: 400 }
+      );
+    }
+
+    // Additional validation for numeric fields
+    if (typeof year !== 'number' || typeof mileage !== 'number' || typeof estimatedPrice !== 'number') {
+      return NextResponse.json(
+        { error: 'Year, mileage, and estimated price must be numbers' },
+        { status: 400 }
+      );
+    }
+
+    if (mileage < 0) {
+      return NextResponse.json(
+        { error: 'Mileage cannot be negative' },
         { status: 400 }
       );
     }

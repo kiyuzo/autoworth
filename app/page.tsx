@@ -147,8 +147,8 @@ export default function Home() {
     e.preventDefault();
     setError("");
     
-    // Validation
-    if (!brand || !model || !trim || !year || !mileage) {
+    // Updated validation to properly handle 0 values
+    if (!brand || !model || !trim || year === "" || mileage === "") {
       setError("Please fill in all fields");
       return;
     }
@@ -161,8 +161,9 @@ export default function Home() {
       return;
     }
 
+    // Updated mileage validation to accept 0 but reject negative numbers
     if (isNaN(mileageNum) || mileageNum < 0) {
-      setError("Please enter a valid mileage");
+      setError("Please enter a valid mileage (cannot be negative)");
       return;
     }
 
@@ -175,7 +176,7 @@ export default function Home() {
         trim: trim.name,
         year: yearNum,
         mileage: mileageNum,
-        userId: isGuest ? undefined : dbUser?.user_id // Only include userId for authenticated users
+        userId: isGuest ? undefined : dbUser?.user_id
       };
 
       const result = await predictCarPrice(predictionData);
@@ -342,8 +343,15 @@ export default function Home() {
                 type="number"
                 placeholder="Mileage"
                 value={mileage}
-                onChange={(e) => setMileage(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Prevent negative values from being entered
+                  if (value === "" || parseInt(value) >= 0) {
+                    setMileage(value);
+                  }
+                }}
                 min="0"
+                step="1"
                 className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-black focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               />
               
