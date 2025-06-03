@@ -6,6 +6,8 @@ export async function POST(request: Request) {
   try {
     const { userId, brand, model, trim, year, mileage, estimatedPrice } = await request.json();
 
+    console.log('Received valuation data:', { userId, brand, model, trim, year, mileage, estimatedPrice });
+
     if (!userId || !brand || !model || !trim || !year || !mileage || !estimatedPrice) {
       return NextResponse.json(
         { error: 'All fields are required' },
@@ -19,40 +21,64 @@ export async function POST(request: Request) {
       // Start transaction
       await client.query('BEGIN');
 
-      // First, find the car_id from the Car table
+      // First, find the car_id from the Car table (case-insensitive search)
       const carResult = await client.query(
-        'SELECT Car_ID FROM Car WHERE Brand = $1 AND Model = $2 AND Trim = $3',
+        'SELECT Car_ID FROM Car WHERE LOWER(Brand) = LOWER($1) AND LOWER(Model) = LOWER($2) AND LOWER(Trim) = LOWER($3)',
         [brand, model, trim]
       );
 
       if (carResult.rows.length === 0) {
-        await client.query('ROLLBACK');
-        client.release();
-        return NextResponse.json(
-          { error: 'Car not found in database' },
-          { status: 404 }
+        // If car not found, insert it
+        console.log('Car not found, inserting new car:', { brand, model, trim });
+        const insertCarResult = await client.query(
+          'INSERT INTO Car (Brand, Model, Trim) VALUES ($1, $2, $3) RETURNING Car_ID',
+          [brand, model, trim]
         );
+        var carId = insertCarResult.rows[0].car_id;
+      } else {
+        var carId = carResult.rows[0].car_id;
       }
 
-      const carId = carResult.rows[0].car_id;
+      console.log('Using Car_ID:', carId);
 
-      // Insert into car_valuation table
+      // Get the next req_id manually
+      const nextReqIdResult = await client.query(`
+        SELECT COALESCE(MAX(req_id), 0) + 1 as next_req_id FROM car_valuation
+      `);
+      const nextReqId = nextReqIdResult.rows[0].next_req_id;
+
+      console.log('Using next req_id:', nextReqId);
+
+      // Insert into car_valuation table with explicit req_id
       const valuationResult = await client.query(`
-        INSERT INTO car_valuation (user_id, car_id, year, mileage)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO car_valuation (req_id, user_id, car_id, year, mileage)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING req_id
-      `, [userId, carId, year, mileage]);
+      `, [nextReqId, userId, carId, year, mileage]);
 
       const reqId = valuationResult.rows[0].req_id;
 
-      // Insert into valuation_result table with timestamp
+      console.log('Inserted valuation with req_id:', reqId);
+
+      // Get the next val_id manually
+      const nextValIdResult = await client.query(`
+        SELECT COALESCE(MAX(val_id), 0) + 1 as next_val_id FROM valuation_result
+      `);
+      const nextValId = nextValIdResult.rows[0].next_val_id;
+
+      console.log('Using next val_id:', nextValId);
+
+      // Insert into valuation_result table with explicit val_id
       const resultInsert = await client.query(`
-        INSERT INTO valuation_result (req_id, estimated_price, created_at)
-        VALUES ($1, $2, NOW())
-        RETURNING val_id
-      `, [reqId, estimatedPrice]);
+        INSERT INTO valuation_result (val_id, req_id, estimated_price, created_at)
+        VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+        RETURNING val_id, created_at
+      `, [nextValId, reqId, estimatedPrice]);
 
       const valId = resultInsert.rows[0].val_id;
+      const createdAt = resultInsert.rows[0].created_at;
+
+      console.log('Inserted result with val_id:', valId);
 
       // Commit transaction
       await client.query('COMMIT');
@@ -67,19 +93,21 @@ export async function POST(request: Request) {
           car_id: carId,
           year,
           mileage,
-          estimated_price: estimatedPrice
+          estimated_price: estimatedPrice,
+          created_at: createdAt
         }
       });
 
     } catch (dbError) {
       await client.query('ROLLBACK');
       client.release();
+      console.error('Database error:', dbError);
       throw dbError;
     }
   } catch (error) {
     console.error('Error saving valuation:', error);
     return NextResponse.json(
-      { error: 'Failed to save valuation data' },
+      { error: 'Failed to save valuation data', details: error.message },
       { status: 500 }
     );
   }
@@ -105,9 +133,9 @@ export async function GET(request: Request) {
         cv.req_id,
         cv.year,
         cv.mileage,
-        c.Brand,
-        c.Model,
-        c.Trim,
+        c.Brand as brand,
+        c.Model as model,
+        c.Trim as trim,
         vr.estimated_price,
         vr.created_at
       FROM car_valuation cv
@@ -118,6 +146,8 @@ export async function GET(request: Request) {
     `, [userId]);
     
     client.release();
+
+    console.log(`Found ${result.rows.length} valuations for user ${userId}`);
 
     return NextResponse.json({
       valuations: result.rows

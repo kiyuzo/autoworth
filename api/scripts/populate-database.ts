@@ -2249,7 +2249,13 @@ const carData = {
         "TRD Sport V6 Double Cab 4WD",
         "TRD Sport V6 Double Cab LB 4WD",
         "TRD Sport V6 Double Cab RWD",
-        "V6 4dr Double Cab 4WD SB with automatic"
+        "TRD Sport V8 CrewMax 4WD",
+        "TRD Sport V8 Double Cab 4WD",
+        "TRD Sport V8 Double Cab RWD",
+        "TRD Sport V8 Regular Cab RWD",
+        "TRD Sport V8 Regular Cab V8 Stepside RWD",
+        // "TRD Sport V8 RWD", // Duplicate entry in original data, kept one
+        // "TRD Sport V8 Stepside RWD" // Duplicate entry in original data, kept one
       ],
       "Tundra": [
         "1794 Edition CrewMax 4WD",
@@ -2359,11 +2365,10 @@ const carData = {
 
 // Database configuration
 const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'autoworth_db',
-  password: process.env.DB_PASSWORD || 'db225',
-  port: parseInt(process.env.DB_PORT || '5432'),
+  connectionString: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_cpVeq4Ps8Cmb@ep-crimson-dream-a1s8ubo6-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 async function createCarTableIfNotExist(client: any) {
@@ -2385,7 +2390,57 @@ async function createCarTableIfNotExist(client: any) {
     );
   `);
 
-  console.log('✅ Car table created/verified');
+  // Ensure car_valuation table has proper structure
+  console.log('🔧 Checking car_valuation table structure...');
+  
+  // Check if car_valuation table exists and has correct structure
+  const tableStructure = await client.query(`
+    SELECT column_name, data_type, is_nullable, column_default
+    FROM information_schema.columns 
+    WHERE table_name = 'car_valuation' AND table_schema = 'public'
+    ORDER BY ordinal_position;
+  `);
+
+  console.log('Current car_valuation structure:', tableStructure.rows);
+
+  // If table doesn't exist or has wrong structure, create it
+  if (tableStructure.rows.length === 0) {
+    console.log('🔧 Creating car_valuation table...');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS car_valuation (
+        req_id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        car_id INTEGER NOT NULL,
+        year INTEGER NOT NULL,
+        mileage INTEGER NOT NULL,
+        FOREIGN KEY (car_id) REFERENCES Car(Car_ID)
+      );
+    `);
+  } else {
+    // Check if req_id is properly set as SERIAL
+    const reqIdColumn = tableStructure.rows.find(row => row.column_name === 'req_id');
+    if (!reqIdColumn || !reqIdColumn.column_default || !reqIdColumn.column_default.includes('nextval')) {
+      console.log('🔧 Fixing req_id column to be auto-increment...');
+      
+      // Create sequence if it doesn't exist
+      await client.query(`
+        CREATE SEQUENCE IF NOT EXISTS car_valuation_req_id_seq;
+      `);
+      
+      // Set the column default to use the sequence
+      await client.query(`
+        ALTER TABLE car_valuation 
+        ALTER COLUMN req_id SET DEFAULT nextval('car_valuation_req_id_seq');
+      `);
+      
+      // Set sequence ownership
+      await client.query(`
+        ALTER SEQUENCE car_valuation_req_id_seq OWNED BY car_valuation.req_id;
+      `);
+    }
+  }
+
+  console.log('✅ Car and car_valuation tables created/verified');
 }
 
 async function populateDatabase() {
@@ -2395,7 +2450,7 @@ async function populateDatabase() {
     console.log('🚀 Starting database population...');
     
     // Create Car table first
-    await createCarTableIfNotExist(client);
+    await createCarTableIfnotExist(client);
     
     // Check if table exists
     const tableExists = await client.query(`

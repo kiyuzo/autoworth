@@ -32,6 +32,16 @@ export const predictCarPrice = async (data: PredictionRequest): Promise<Predicti
     // If userId is provided, save to database
     if (data.userId) {
       try {
+        console.log('Saving valuation to database:', {
+          userId: data.userId,
+          brand: data.brand,
+          model: data.model,
+          trim: data.trim,
+          year: data.year,
+          mileage: data.mileage,
+          estimatedPrice: predictionResult.predicted_price
+        });
+
         const saveResponse = await fetch('/api/valuation', {
           method: 'POST',
           headers: {
@@ -52,7 +62,10 @@ export const predictCarPrice = async (data: PredictionRequest): Promise<Predicti
           const saveResult = await saveResponse.json();
           predictionResult.req_id = saveResult.data.req_id;
           predictionResult.val_id = saveResult.data.val_id;
-          console.log('Valuation saved to database');
+          console.log('Valuation saved to database successfully:', saveResult);
+        } else {
+          const errorText = await saveResponse.text();
+          console.error('Failed to save valuation to database:', errorText);
         }
       } catch (saveError) {
         console.error('Error saving valuation to database:', saveError);

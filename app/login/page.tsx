@@ -132,7 +132,7 @@ export default function Login() {
               <span 
                 className={`font-semibold ${darkMode ? 'text-black' : 'text-black'}`}
                 style={{ 
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Plus Jakarta Sans, sans-serif',
                   fontSize: '1.25rem'
                 }}
               >
@@ -151,7 +151,7 @@ export default function Login() {
               <span 
                 className={`mx-4 ${darkMode ? 'text-white' : 'text-black'}`}
                 style={{ 
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Plus Jakarta Sans, sans-serif',
                   fontSize: '1rem',
                   fontWeight: '400'
                 }}
@@ -173,7 +173,7 @@ export default function Login() {
               <span 
                 className={`font-semibold ${darkMode ? 'text-black' : 'text-black'}`}
                 style={{ 
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Plus Jakarta Sans, sans-serif',
                   fontSize: '1.25rem'
                 }}
               >

@@ -11,9 +11,7 @@ interface ValuationHistory {
   year: number;
   mileage: number;
   estimated_price: number;
-  request_date: string;
-  valuation_date: string;
-  user_name: string;
+  created_at: string; // This should match the API response
 }
 
 export default function History() {
@@ -133,7 +131,7 @@ export default function History() {
                       </div>
                     </div>
                     <div className="text-sm text-gray-500">
-                      {formatDate(item.created_at)}
+                      {formatDate(item.created_at)} {/* Use created_at instead of request_date */}
                     </div>
                   </div>
 
