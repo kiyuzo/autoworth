@@ -133,14 +133,14 @@ export default function Navbar() {
               </div>
             ) : isGuest ? (
               <Link
-                href="/login"
+                href="/landing"
                 className="text-white hover:opacity-80 font-medium text-sm md:text-base"
               >
                 Login
               </Link>
             ) : (
               <Link
-                href="/login"
+                href="/landing"
                 className="text-white hover:opacity-80 font-medium text-sm md:text-base"
               >
                 Login

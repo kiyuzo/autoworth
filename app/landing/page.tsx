@@ -1,14 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function Landing() {
   const [darkMode, setDarkMode] = useState(false);
   const router = useRouter();
+  const { user, isGuest, signInWithGoogle, setGuestMode } = useAuth();
+
+  // Redirect authenticated users to home page (but allow guest users to stay)
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   const handleTryNow = () => {
-    // Navigate to the main app page
+    // Navigate to login page for authentication options
+    router.push('/login');
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      // Will be redirected by useEffect after successful login
+    } catch (error) {
+      console.error('Google sign in failed:', error);
+    }
+  };
+
+  const handleGuestMode = () => {
+    setGuestMode(true);
     router.push('/');
   };
 

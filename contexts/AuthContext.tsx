@@ -93,8 +93,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await signOut(auth);
       setDbUser(null);
       setIsGuest(false);
-      // Force redirect to login page after logout
-      window.location.href = '/login';
+      // Force redirect to landing page after logout
+      window.location.href = '/landing';
     } catch (error) {
       console.error('Error signing out:', error);
     }
