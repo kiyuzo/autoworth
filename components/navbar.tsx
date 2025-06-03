@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect, useRef } from 'react';
 
 export default function Navbar() {
-  const { user, logout, dbUser } = useAuth();
+  const { user, logout, dbUser, isGuest } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -82,7 +82,7 @@ export default function Navbar() {
             </Link>
           </div>
           
-          {/* Right side - Profile or Login */}
+          {/* Right side - Profile, Login, or Guest indicator */}
           <div className="absolute right-0">
             {user ? (
               <div className="relative" ref={profileDropdownRef}>
@@ -131,6 +131,13 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
+            ) : isGuest ? (
+              <Link
+                href="/login"
+                className="text-white hover:opacity-80 font-medium text-sm md:text-base"
+              >
+                Login
+              </Link>
             ) : (
               <Link
                 href="/login"

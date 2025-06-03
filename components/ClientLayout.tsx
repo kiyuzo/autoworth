@@ -9,7 +9,7 @@ interface ClientLayoutProps {
 }
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, isGuest } = useAuth();
   const pathname = usePathname();
   
   // Pages that don't require authentication
@@ -28,8 +28,8 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     );
   }
 
-  // If user is not authenticated and trying to access protected page
-  if (!user && !isPublicPage) {
+  // If user is not authenticated and not guest and trying to access protected page
+  if (!user && !isGuest && !isPublicPage) {
     // Redirect to login will be handled by the login page
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -55,7 +55,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
 
   return (
     <>
-      {user && <Navbar />}
+      {(user || isGuest) && !isPublicPage && <Navbar />}
       {children}
     </>
   );

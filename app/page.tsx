@@ -25,7 +25,7 @@ interface Trim {
 
 export default function Home() {
   const router = useRouter();
-  const { dbUser } = useAuth();
+  const { dbUser, isGuest } = useAuth();
 
   const [brand, setBrand] = useState<Brand | null>(null);
   const [model, setModel] = useState<Model | null>(null);
@@ -175,7 +175,7 @@ export default function Home() {
         trim: trim.name,
         year: yearNum,
         mileage: mileageNum,
-        userId: dbUser?.user_id // ADD THIS LINE ONLY
+        userId: isGuest ? undefined : dbUser?.user_id // Only include userId for authenticated users
       };
 
       const result = await predictCarPrice(predictionData);

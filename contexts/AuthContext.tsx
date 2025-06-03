@@ -10,6 +10,8 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   dbUser: any;
+  isGuest: boolean;
+  setGuestMode: (isGuest: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [dbUser, setDbUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   // Function to save/update user in database
   const saveUserToDatabase = async (firebaseUser: User) => {
@@ -63,8 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (firebaseUser) {
         // Save/update user in database when they sign in
         await saveUserToDatabase(firebaseUser);
+        setIsGuest(false);
       } else {
         setDbUser(null);
+        // Don't reset guest mode here - let it persist
       }
       
       setLoading(false);
@@ -76,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
+      setIsGuest(false);
       // User will be automatically saved to database via onAuthStateChanged
     } catch (error) {
       console.error('Error signing in with Google:', error);
@@ -86,11 +92,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await signOut(auth);
       setDbUser(null);
+      setIsGuest(false);
       // Force redirect to login page after logout
       window.location.href = '/login';
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  };
+
+  const setGuestMode = (guestMode: boolean) => {
+    setIsGuest(guestMode);
   };
 
   const value = {
@@ -99,6 +110,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle,
     logout,
     dbUser,
+    isGuest,
+    setGuestMode,
   };
 
   return (
