@@ -23,6 +23,13 @@ interface Trim {
   model_name: string;
 }
 
+// Add reCAPTCHA type declaration
+declare global {
+  interface Window {
+    grecaptcha: any;
+  }
+}
+
 export default function Home() {
   const router = useRouter();
   const { dbUser, isGuest } = useAuth();
@@ -48,11 +55,78 @@ export default function Home() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // Add reCAPTCHA state
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState<number | null>(null);
+  const [recaptchaRendered, setRecaptchaRendered] = useState(false);
+  const recaptchaRef = useRef<HTMLDivElement>(null);
 
   // Refs for blur handling
   const brandDropdownRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const modelDropdownRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const trimDropdownRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+
+  // Load reCAPTCHA script
+  useEffect(() => {
+    const loadRecaptcha = () => {
+      if (window.grecaptcha) {
+        setRecaptchaLoaded(true);
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
+      script.async = true;
+      script.defer = true;
+      
+      // Global callback for when reCAPTCHA loads
+      (window as any).onRecaptchaLoad = () => {
+        setRecaptchaLoaded(true);
+      };
+      
+      document.head.appendChild(script);
+    };
+
+    loadRecaptcha();
+
+    // Cleanup
+    return () => {
+      if ((window as any).onRecaptchaLoad) {
+        delete (window as any).onRecaptchaLoad;
+      }
+    };
+  }, []);
+
+  // Initialize reCAPTCHA when loaded
+  useEffect(() => {
+    if (recaptchaLoaded && window.grecaptcha && window.grecaptcha.render && recaptchaRef.current && !recaptchaRendered) {
+      try {
+        // Clear any existing content in the container
+        if (recaptchaRef.current) {
+          recaptchaRef.current.innerHTML = '';
+        }
+
+        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+          sitekey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
+          callback: (token: string) => {
+            setRecaptchaToken(token);
+          },
+          'expired-callback': () => {
+            setRecaptchaToken(null);
+          },
+          'error-callback': () => {
+            setRecaptchaToken(null);
+          }
+        });
+        setRecaptchaWidgetId(widgetId);
+        setRecaptchaRendered(true);
+      } catch (error) {
+        console.error('Error initializing reCAPTCHA:', error);
+      }
+    }
+  }, [recaptchaLoaded, recaptchaRendered]); // Removed recaptchaWidgetId from dependencies
 
   // Fetch brands on component mount
   useEffect(() => {
@@ -147,9 +221,15 @@ export default function Home() {
     e.preventDefault();
     setError("");
     
-    // Updated validation to properly handle 0 values
+    // Existing validation
     if (!brand || !model || !trim || year === "" || mileage === "") {
       setError("Please fill in all fields");
+      return;
+    }
+
+    // Modified reCAPTCHA validation - make it optional if not loaded
+    if (recaptchaLoaded && recaptchaRendered && !recaptchaToken) {
+      setError("Please complete the reCAPTCHA verification");
       return;
     }
 
@@ -161,7 +241,6 @@ export default function Home() {
       return;
     }
 
-    // Updated mileage validation to accept 0 but reject negative numbers
     if (isNaN(mileageNum) || mileageNum < 0) {
       setError("Please enter a valid mileage (cannot be negative)");
       return;
@@ -170,6 +249,21 @@ export default function Home() {
     setIsLoading(true);
 
     try {
+      // Only verify reCAPTCHA if it's loaded and we have a token
+      if (recaptchaLoaded && recaptchaRendered && recaptchaToken) {
+        const recaptchaResponse = await fetch('/api/verify-recaptcha', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token: recaptchaToken }),
+        });
+
+        if (!recaptchaResponse.ok) {
+          throw new Error('reCAPTCHA verification failed');
+        }
+      }
+
       const predictionData: PredictionRequest = {
         brand: brand.name,
         model: model.name,
@@ -189,6 +283,16 @@ export default function Home() {
     } catch (error) {
       console.error('Prediction error:', error);
       setError("Failed to get price prediction. Please try again.");
+      
+      // Reset reCAPTCHA on error
+      if (window.grecaptcha && recaptchaWidgetId !== null) {
+        try {
+          window.grecaptcha.reset(recaptchaWidgetId);
+          setRecaptchaToken(null);
+        } catch (resetError) {
+          console.error('Error resetting reCAPTCHA:', resetError);
+        }
+      }
     } finally {
       setIsLoading(false);
     }
@@ -355,9 +459,14 @@ export default function Home() {
                 className="appearance-none block w-full px-3 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-black focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               />
               
+              {/* Add reCAPTCHA before submit button - Always show container */}
+              <div className="flex justify-center">
+                <div ref={recaptchaRef} style={{ minHeight: recaptchaLoaded ? '78px' : '0px' }}></div>
+              </div>
+              
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || (recaptchaLoaded && !recaptchaToken)}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow text-sm font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#001233' }}
               >
