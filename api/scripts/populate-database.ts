@@ -1,6 +1,5 @@
 import { Pool } from 'pg';
 
-// Your existing carData stays the same...
 const carData = {
   Audi: {
     models: {
@@ -1295,7 +1294,7 @@ const carData = {
       ]
     }
   },
-  "Mercedes-Benz": { // Changed from "Mercedes" to "Mercedes-Benz" for consistency with common naming
+  "Mercedes-Benz": {
     models: {
       "300-Class": [
         "4 Dr 300SE Sedan"
@@ -2254,8 +2253,6 @@ const carData = {
         "TRD Sport V8 Double Cab RWD",
         "TRD Sport V8 Regular Cab RWD",
         "TRD Sport V8 Regular Cab V8 Stepside RWD",
-        // "TRD Sport V8 RWD", // Duplicate entry in original data, kept one
-        // "TRD Sport V8 Stepside RWD" // Duplicate entry in original data, kept one
       ],
       "Tundra": [
         "1794 Edition CrewMax 4WD",
@@ -2321,12 +2318,10 @@ const carData = {
         "SR5 V8 Regular Cab RWD",
         "TRD Pro CrewMax 5.7L 4WD",
         "TRD Pro Double Cab 5.7L 4WD",
-        // "TRD Pro Double Cab 5.7L RWD", // Duplicate entry in original data, kept one
         "TRD Pro Double Cab RWD",
         "TRD Pro Regular Cab RWD",
         "TRD Sport CrewMax 5.7L 4WD",
         "TRD Sport Double Cab 5.7L 4WD",
-        // "TRD Sport Double Cab 5.7L RWD", // Duplicate entry in original data, kept one
         "TRD Sport Double Cab RWD",
         "TRD Sport Regular Cab RWD",
         "TRD Sport Regular Cab V6 RWD",
@@ -2342,8 +2337,6 @@ const carData = {
         "TRD Sport V8 Double Cab RWD",
         "TRD Sport V8 Regular Cab RWD",
         "TRD Sport V8 Regular Cab V8 Stepside RWD",
-        // "TRD Sport V8 RWD", // Duplicate entry in original data, kept one
-        // "TRD Sport V8 Stepside RWD" // Duplicate entry in original data, kept one
       ],
       "Venza": [
         "LE AWD",
@@ -2374,12 +2367,10 @@ const pool = new Pool({
 async function createCarTableIfNotExist(client: any) {
   console.log('🔧 Creating Car table if it doesn\'t exist...');
   
-  // Drop old tables if they exist
   await client.query('DROP TABLE IF EXISTS trims');
   await client.query('DROP TABLE IF EXISTS models');
   await client.query('DROP TABLE IF EXISTS brands');
   
-  // Create the new Car table
   await client.query(`
     CREATE TABLE IF NOT EXISTS Car (
       Car_ID SERIAL PRIMARY KEY,
@@ -2390,10 +2381,8 @@ async function createCarTableIfNotExist(client: any) {
     );
   `);
 
-  // Ensure car_valuation table has proper structure
   console.log('🔧 Checking car_valuation table structure...');
   
-  // Check if car_valuation table exists and has correct structure
   const tableStructure = await client.query(`
     SELECT column_name, data_type, is_nullable, column_default
     FROM information_schema.columns 
@@ -2403,7 +2392,6 @@ async function createCarTableIfNotExist(client: any) {
 
   console.log('Current car_valuation structure:', tableStructure.rows);
 
-  // If table doesn't exist or has wrong structure, create it
   if (tableStructure.rows.length === 0) {
     console.log('🔧 Creating car_valuation table...');
     await client.query(`
@@ -2417,23 +2405,19 @@ async function createCarTableIfNotExist(client: any) {
       );
     `);
   } else {
-    // Check if req_id is properly set as SERIAL
     const reqIdColumn = tableStructure.rows.find(row => row.column_name === 'req_id');
     if (!reqIdColumn || !reqIdColumn.column_default || !reqIdColumn.column_default.includes('nextval')) {
       console.log('🔧 Fixing req_id column to be auto-increment...');
-      
-      // Create sequence if it doesn't exist
+
       await client.query(`
         CREATE SEQUENCE IF NOT EXISTS car_valuation_req_id_seq;
       `);
       
-      // Set the column default to use the sequence
       await client.query(`
         ALTER TABLE car_valuation 
         ALTER COLUMN req_id SET DEFAULT nextval('car_valuation_req_id_seq');
       `);
       
-      // Set sequence ownership
       await client.query(`
         ALTER SEQUENCE car_valuation_req_id_seq OWNED BY car_valuation.req_id;
       `);
@@ -2449,10 +2433,8 @@ async function populateDatabase() {
   try {
     console.log('🚀 Starting database population...');
     
-    // Create Car table first
     await createCarTableIfnotExist(client);
     
-    // Check if table exists
     const tableExists = await client.query(`
       SELECT table_name FROM information_schema.tables 
       WHERE table_schema = 'public' AND table_name = 'car'
@@ -2460,11 +2442,9 @@ async function populateDatabase() {
     
     console.log(`📋 Found ${tableExists.rows.length} Car table`);
     
-    // Clear existing data
     console.log('🗑️  Clearing existing data...');
     await client.query('DELETE FROM Car');
     
-    // Reset sequence
     await client.query('ALTER SEQUENCE car_car_id_seq RESTART WITH 1');
     
     let carCount = 0;
@@ -2475,7 +2455,6 @@ async function populateDatabase() {
       for (const [modelName, trims] of Object.entries(brandData.models)) {
         console.log(`   📱 Processing model: ${modelName}`);
         
-        // Insert each car (brand + model + trim combination)
         for (const trimName of trims) {
           try {
             await client.query(
@@ -2484,8 +2463,7 @@ async function populateDatabase() {
             );
             carCount++;
           } catch (error) {
-            // Skip duplicates but log them
-            if (error.code !== '23505') { // 23505 is unique violation error code
+            if (error.code !== '23505') {
               console.error(`Error inserting ${brandName} ${modelName} ${trimName}:`, error.message);
             }
           }
@@ -2497,11 +2475,9 @@ async function populateDatabase() {
     console.log(`📊 Summary:`);
     console.log(`   🚗 Total cars inserted: ${carCount}`);
     
-    // Get actual count from database
     const actualCount = await client.query('SELECT COUNT(*) as count FROM Car');
     console.log(`   📊 Total cars in database: ${actualCount.rows[0].count}`);
     
-    // Show some sample data
     console.log('\n📋 Sample data:');
     const sampleData = await client.query(`
       SELECT Brand, Model, Trim
@@ -2514,7 +2490,6 @@ async function populateDatabase() {
       console.log(`   ${index + 1}. ${row.brand} ${row.model} - ${row.trim}`);
     });
     
-    // Show brand summary
     console.log('\n📈 Brand summary:');
     const brandSummary = await client.query(`
       SELECT Brand, COUNT(*) as car_count

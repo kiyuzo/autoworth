@@ -10,7 +10,6 @@ export default function Landing() {
   const router = useRouter();
   const { user, isGuest, signInWithGoogle, setGuestMode } = useAuth();
 
-  // Dark mode effect
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -19,7 +18,6 @@ export default function Landing() {
     }
   }, [darkMode]);
 
-  // Redirect authenticated users to home page (but allow guest users to stay)
   useEffect(() => {
     if (user) {
       router.push('/');
@@ -27,14 +25,12 @@ export default function Landing() {
   }, [user, router]);
 
   const handleTryNow = () => {
-    // Navigate to login page for authentication options
     router.push('/login');
   };
 
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      // Will be redirected by useEffect after successful login
     } catch (error) {
       console.error('Google sign in failed:', error);
     }
@@ -101,8 +97,8 @@ export default function Landing() {
               className="leading-tight"
               style={{ 
                 fontFamily: 'Plus Jakarta Sans, sans-serif',
-                fontWeight: '800', // Extrabold
-                fontSize: 'clamp(1.5rem, 4vw, 4.5rem)', // Reduced from clamp(2rem, 5.2vw, 6.25rem)
+                fontWeight: '800',
+                fontSize: 'clamp(1.5rem, 4vw, 4.5rem)',
                 lineHeight: '1.1'
               }}
             >
@@ -123,9 +119,9 @@ export default function Landing() {
               darkMode ? 'bg-[#81C3D7]' : 'bg-[#001233]'
             }`}
             style={{
-              width: 'clamp(180px, 20vw, 320px)', // More responsive width
-              height: 'clamp(50px, 6vw, 100px)', // More responsive height
-              borderRadius: '5rem', // 5xl rounded
+              width: 'clamp(180px, 20vw, 320px)', 
+              height: 'clamp(50px, 6vw, 100px)', 
+              borderRadius: '5rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
@@ -135,8 +131,8 @@ export default function Landing() {
               className={darkMode ? 'text-[#283B4C]' : 'text-[#F1F4F5]'}
               style={{
                 fontFamily: 'Plus Jakarta Sans, sans-serif',
-                fontWeight: '700', // Bold
-                fontSize: 'clamp(1rem, 2.2vw, 2.2rem)' // More responsive font size
+                fontWeight: '700', 
+                fontSize: 'clamp(1rem, 2.2vw, 2.2rem)'
               }}
             >
               Try Now

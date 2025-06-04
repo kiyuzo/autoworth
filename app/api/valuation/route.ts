@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server';
 import pool from '../../../lib/db';
 
-// POST - Create new car valuation request
 export async function POST(request: Request) {
   try {
     const { userId, brand, model, trim, year, mileage, estimatedPrice } = await request.json();
 
     console.log('Received valuation data:', { userId, brand, model, trim, year, mileage, estimatedPrice });
 
-    // Updated validation to properly handle 0 values
     if (!userId || !brand || !model || !trim || year == null || mileage == null || !estimatedPrice) {
       return NextResponse.json(
         { error: 'All fields are required' },
@@ -16,7 +14,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Additional validation for numeric fields
     if (typeof year !== 'number' || typeof mileage !== 'number' || typeof estimatedPrice !== 'number') {
       return NextResponse.json(
         { error: 'Year, mileage, and estimated price must be numbers' },
@@ -34,17 +31,14 @@ export async function POST(request: Request) {
     const client = await pool.connect();
 
     try {
-      // Start transaction
       await client.query('BEGIN');
 
-      // First, find the car_id from the Car table (case-insensitive search)
       const carResult = await client.query(
         'SELECT Car_ID FROM Car WHERE LOWER(Brand) = LOWER($1) AND LOWER(Model) = LOWER($2) AND LOWER(Trim) = LOWER($3)',
         [brand, model, trim]
       );
 
       if (carResult.rows.length === 0) {
-        // If car not found, insert it
         console.log('Car not found, inserting new car:', { brand, model, trim });
         const insertCarResult = await client.query(
           'INSERT INTO Car (Brand, Model, Trim) VALUES ($1, $2, $3) RETURNING Car_ID',
@@ -57,7 +51,6 @@ export async function POST(request: Request) {
 
       console.log('Using Car_ID:', carId);
 
-      // Get the next req_id manually
       const nextReqIdResult = await client.query(`
         SELECT COALESCE(MAX(req_id), 0) + 1 as next_req_id FROM car_valuation
       `);
@@ -65,7 +58,6 @@ export async function POST(request: Request) {
 
       console.log('Using next req_id:', nextReqId);
 
-      // Insert into car_valuation table with explicit req_id
       const valuationResult = await client.query(`
         INSERT INTO car_valuation (req_id, user_id, car_id, year, mileage)
         VALUES ($1, $2, $3, $4, $5)
@@ -76,7 +68,6 @@ export async function POST(request: Request) {
 
       console.log('Inserted valuation with req_id:', reqId);
 
-      // Get the next val_id manually
       const nextValIdResult = await client.query(`
         SELECT COALESCE(MAX(val_id), 0) + 1 as next_val_id FROM valuation_result
       `);
@@ -84,7 +75,6 @@ export async function POST(request: Request) {
 
       console.log('Using next val_id:', nextValId);
 
-      // Insert into valuation_result table with explicit val_id
       const resultInsert = await client.query(`
         INSERT INTO valuation_result (val_id, req_id, estimated_price, created_at)
         VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
@@ -96,7 +86,6 @@ export async function POST(request: Request) {
 
       console.log('Inserted result with val_id:', valId);
 
-      // Commit transaction
       await client.query('COMMIT');
       client.release();
 
@@ -129,7 +118,6 @@ export async function POST(request: Request) {
   }
 }
 
-// GET - Retrieve user's valuation history
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');

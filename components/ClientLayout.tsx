@@ -16,7 +16,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   const publicPages = ['/login', '/signup', '/landing'];
   const isPublicPage = publicPages.includes(pathname);
 
-  // Show loading spinner while checking auth
+  // loading spinner
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -28,9 +28,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     );
   }
 
-  // If user is not authenticated and not guest and trying to access protected page
   if (!user && !isGuest && !isPublicPage) {
-    // Redirect to landing page instead of login
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -47,7 +45,6 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     );
   }
 
-  // If user is authenticated and trying to access login or landing page, redirect to home
   if (user && (isPublicPage || pathname === '/landing')) {
     window.location.href = '/';
     return null;

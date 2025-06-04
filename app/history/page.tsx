@@ -11,7 +11,7 @@ interface ValuationHistory {
   year: number;
   mileage: number;
   estimated_price: number;
-  created_at: string; // This should match the API response
+  created_at: string;
 }
 
 export default function History() {
@@ -131,14 +131,12 @@ export default function History() {
                       </div>
                     </div>
                     <div className="text-sm text-gray-500">
-                      {formatDate(item.created_at)} {/* Use created_at instead of request_date */}
+                      {formatDate(item.created_at)}
                     </div>
                   </div>
 
-                  {/* Separator Line */}
                   <hr className="border-gray-200 mb-4" />
 
-                  {/* Bottom Part */}
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-700">Year:</span>

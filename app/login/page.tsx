@@ -12,7 +12,6 @@ export default function Login() {
   const { signInWithGoogle, user, setGuestMode } = useAuth();
   const router = useRouter();
 
-  // Dark mode effect
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -21,7 +20,6 @@ export default function Login() {
     }
   }, [darkMode]);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       router.push('/');
@@ -33,7 +31,6 @@ export default function Login() {
     setError('');
     try {
       await signInWithGoogle();
-      // The redirect will be handled by the useEffect above
     } catch (error) {
       console.error('Google sign-in failed:', error);
       setError('Failed to sign in with Google. Please try again.');
@@ -43,7 +40,6 @@ export default function Login() {
   };
 
   const handleGuestAccess = () => {
-    // Set guest mode and navigate to home page
     setGuestMode(true);
     router.push('/');
   };
@@ -52,7 +48,6 @@ export default function Login() {
     setDarkMode(!darkMode);
   };
 
-  // Don't render if user is already logged in
   if (user) {
     return null;
   }

@@ -30,7 +30,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
 
-  // Function to save/update user in database
   const saveUserToDatabase = async (firebaseUser: User) => {
     try {
       const userData = {
@@ -64,12 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(firebaseUser);
       
       if (firebaseUser) {
-        // Save/update user in database when they sign in
         await saveUserToDatabase(firebaseUser);
         setIsGuest(false);
       } else {
         setDbUser(null);
-        // Don't reset guest mode here - let it persist
       }
       
       setLoading(false);
@@ -82,7 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       setIsGuest(false);
-      // User will be automatically saved to database via onAuthStateChanged
     } catch (error) {
       console.error('Error signing in with Google:', error);
     }
@@ -93,7 +89,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await signOut(auth);
       setDbUser(null);
       setIsGuest(false);
-      // Force redirect to landing page after logout
       window.location.href = '/landing';
     } catch (error) {
       console.error('Error signing out:', error);

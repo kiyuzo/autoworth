@@ -1,4 +1,3 @@
-// autoworth-api/server.js
 const express = require('express');
 const cors = require('cors');
 const { PythonShell } = require('python-shell');

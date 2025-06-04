@@ -6,10 +6,9 @@ import joblib
 import os
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app) 
 
-# Load your trained model
-MODEL_PATH = 'model.pkl'  # Your model is in the same directory
+MODEL_PATH = 'model.pkl' 
 try:
     model = joblib.load(MODEL_PATH)
     print("Model loaded successfully!")
@@ -23,20 +22,17 @@ def preprocess_input(brand, model_name, trim, year, mileage):
     Preprocess input data to match your model's expected format.
     Your model expects exactly these features: ['year', 'make_name', 'model_name', 'mileage', 'trim_name']
     """
-    # Create a dictionary with the exact features your model expects
     data = {
         'year': year,
-        'make_name': brand,        # Frontend sends 'brand', model expects 'make_name'
-        'model_name': model_name,  # This matches
+        'make_name': brand,        
+        'model_name': model_name,  
         'mileage': mileage,
-        'trim_name': trim          # Frontend sends 'trim', model expects 'trim_name'
+        'trim_name': trim         
     }
     
-    # Convert to DataFrame with the exact column order your model expects
     features = ['year', 'make_name', 'model_name', 'mileage', 'trim_name']
     df = pd.DataFrame([data])
     
-    # Ensure we have the columns in the right order
     df = df[features]
     
     return df
@@ -48,9 +44,8 @@ def predict_price():
             return jsonify({'error': 'Model not loaded'}), 500
             
         data = request.get_json()
-        print(f"Received data: {data}")  # Debug log
-        
-        # Validate input
+        print(f"Received data: {data}") 
+
         required_fields = ['brand', 'model', 'trim', 'year', 'mileage']
         for field in required_fields:
             if field not in data:
@@ -62,18 +57,18 @@ def predict_price():
         year = int(data['year'])
         mileage = int(data['mileage'])
         
-        print(f"Processing: {brand} {model_name} {trim} {year} {mileage}")  # Debug log
+        print(f"Processing: {brand} {model_name} {trim} {year} {mileage}")  
         
         # Preprocess the input
         processed_data = preprocess_input(brand, model_name, trim, year, mileage)
-        print(f"Processed data columns: {processed_data.columns.tolist()}")  # Debug log
-        print(f"Processed data:\n{processed_data}")  # Debug log
+        print(f"Processed data columns: {processed_data.columns.tolist()}")  
+        print(f"Processed data:\n{processed_data}")  
         
         # Make prediction
         prediction = model.predict(processed_data)[0]
         predicted_price = round(float(prediction))
         
-        print(f"Prediction: {predicted_price}")  # Debug log
+        print(f"Prediction: {predicted_price}")  
         
         response = {
             'predicted_price': predicted_price,
@@ -90,7 +85,7 @@ def predict_price():
     except Exception as e:
         print(f"Prediction error: {e}")
         import traceback
-        traceback.print_exc()  # Print full error trace
+        traceback.print_exc()  
         return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
@@ -107,7 +102,6 @@ def model_info():
         if model is None:
             return jsonify({'error': 'Model not loaded'}), 500
         
-        # Try to get feature names if available
         feature_names = None
         if hasattr(model, 'feature_names_in_'):
             feature_names = model.feature_names_in_.tolist()

@@ -15,14 +15,12 @@ export async function POST(request: Request) {
     const client = await pool.connect();
 
     try {
-      // Check if user already exists by email
       const existingUser = await client.query(
         'SELECT * FROM users WHERE email = $1',
         [email]
       );
 
       if (existingUser.rows.length > 0) {
-        // Update existing user's name if it's different
         const updatedUser = await client.query(`
           UPDATE users 
           SET name = $2
@@ -37,7 +35,6 @@ export async function POST(request: Request) {
           isNewUser: false
         });
       } else {
-        // Create new user
         const newUser = await client.query(`
           INSERT INTO users (name, email)
           VALUES ($1, $2)

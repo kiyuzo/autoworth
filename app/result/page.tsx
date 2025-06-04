@@ -13,14 +13,12 @@ const ResultPage = () => {
       setResult(JSON.parse(storedResult));
     }
     
-    // Check dark mode
     const checkDarkMode = () => {
       setIsDark(document.documentElement.classList.contains('dark'));
     };
     
     checkDarkMode();
     
-    // Listen for dark mode changes
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     

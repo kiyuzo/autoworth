@@ -8,7 +8,7 @@ export interface PredictionRequest {
   trim: string;
   year: number;
   mileage: number;
-  userId?: number; // Add optional userId
+  userId?: number;
 }
 
 export interface PredictionResponse {
@@ -19,17 +19,15 @@ export interface PredictionResponse {
   trim: string;
   year: number;
   mileage: number;
-  req_id?: number; // Add optional req_id for database tracking
-  val_id?: number; // Add optional val_id for database tracking
+  req_id?: number; 
+  val_id?: number;
 }
 
 export const predictCarPrice = async (data: PredictionRequest): Promise<PredictionResponse> => {
   try {
-    // Call ML API for prediction
     const response = await axios.post(`${API_BASE_URL}/api/predict`, data);
     const predictionResult = response.data;
 
-    // If userId is provided, save to database
     if (data.userId) {
       try {
         console.log('Saving valuation to database:', {
@@ -52,9 +50,9 @@ export const predictCarPrice = async (data: PredictionRequest): Promise<Predicti
             brand: data.brand,
             model: data.model,
             trim: data.trim,
-            year: Number(data.year), // Ensure it's a number
-            mileage: Number(data.mileage), // Ensure it's a number
-            estimatedPrice: Number(predictionResult.predicted_price) // Ensure it's a number
+            year: Number(data.year), 
+            mileage: Number(data.mileage), 
+            estimatedPrice: Number(predictionResult.predicted_price) 
           }),
         });
 

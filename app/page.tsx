@@ -23,7 +23,6 @@ interface Trim {
   model_name: string;
 }
 
-// Add reCAPTCHA type declaration
 declare global {
   interface Window {
     grecaptcha: any;
@@ -44,7 +43,6 @@ export default function Home() {
   const [modelInput, setModelInput] = useState("");
   const [trimInput, setTrimInput] = useState("");
 
-  // Data from database
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [trims, setTrims] = useState<Trim[]>([]);
@@ -56,19 +54,16 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   
-  // Add reCAPTCHA state
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [recaptchaWidgetId, setRecaptchaWidgetId] = useState<number | null>(null);
   const [recaptchaRendered, setRecaptchaRendered] = useState(false);
   const recaptchaRef = useRef<HTMLDivElement>(null);
 
-  // Refs for blur handling
   const brandDropdownRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const modelDropdownRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const trimDropdownRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
 
-  // Load reCAPTCHA script
   useEffect(() => {
     const loadRecaptcha = () => {
       if (window.grecaptcha) {
@@ -81,7 +76,6 @@ export default function Home() {
       script.async = true;
       script.defer = true;
       
-      // Global callback for when reCAPTCHA loads
       (window as any).onRecaptchaLoad = () => {
         setRecaptchaLoaded(true);
       };
@@ -91,7 +85,6 @@ export default function Home() {
 
     loadRecaptcha();
 
-    // Cleanup
     return () => {
       if ((window as any).onRecaptchaLoad) {
         delete (window as any).onRecaptchaLoad;
@@ -99,11 +92,9 @@ export default function Home() {
     };
   }, []);
 
-  // Initialize reCAPTCHA when loaded
   useEffect(() => {
     if (recaptchaLoaded && window.grecaptcha && window.grecaptcha.render && recaptchaRef.current && !recaptchaRendered) {
       try {
-        // Clear any existing content in the container
         if (recaptchaRef.current) {
           recaptchaRef.current.innerHTML = '';
         }
@@ -126,14 +117,12 @@ export default function Home() {
         console.error('Error initializing reCAPTCHA:', error);
       }
     }
-  }, [recaptchaLoaded, recaptchaRendered]); // Removed recaptchaWidgetId from dependencies
+  }, [recaptchaLoaded, recaptchaRendered]);
 
-  // Fetch brands on component mount
   useEffect(() => {
     fetchBrands();
   }, []);
 
-  // Fetch models when brand changes
   useEffect(() => {
     if (brand) {
       fetchModels(brand.name);
@@ -145,7 +134,6 @@ export default function Home() {
     setTrims([]);
   }, [brand]);
 
-  // Fetch trims when model changes
   useEffect(() => {
     if (model && brand) {
       fetchTrims(brand.name, model.name);
@@ -197,7 +185,6 @@ export default function Home() {
     }
   };
 
-  // Filtered lists
   const filteredBrands = brands.filter((b) =>
     b.name.toLowerCase().includes(brandInput.toLowerCase())
   );
@@ -208,7 +195,6 @@ export default function Home() {
     t.name.toLowerCase().includes(trimInput.toLowerCase())
   );
 
-  // Helper for blur: close dropdown only if click is outside
   const handleBlur = (ref: React.RefObject<HTMLDivElement>, setShow: (v: boolean) => void) => () => {
     setTimeout(() => {
       if (ref.current && !ref.current.contains(document.activeElement)) {
@@ -221,13 +207,11 @@ export default function Home() {
     e.preventDefault();
     setError("");
     
-    // Existing validation
     if (!brand || !model || !trim || year === "" || mileage === "") {
       setError("Please fill in all fields");
       return;
     }
 
-    // Modified reCAPTCHA validation - make it optional if not loaded
     if (recaptchaLoaded && recaptchaRendered && !recaptchaToken) {
       setError("Please complete the reCAPTCHA verification");
       return;
@@ -249,7 +233,6 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      // Only verify reCAPTCHA if it's loaded and we have a token
       if (recaptchaLoaded && recaptchaRendered && recaptchaToken) {
         const recaptchaResponse = await fetch('/api/verify-recaptcha', {
           method: 'POST',
@@ -275,16 +258,13 @@ export default function Home() {
 
       const result = await predictCarPrice(predictionData);
       
-      // Store result in localStorage to pass to result page
       localStorage.setItem('predictionResult', JSON.stringify(result));
       
-      // Navigate to result page
       router.push('/result');
     } catch (error) {
       console.error('Prediction error:', error);
       setError("Failed to get price prediction. Please try again.");
       
-      // Reset reCAPTCHA on error
       if (window.grecaptcha && recaptchaWidgetId !== null) {
         try {
           window.grecaptcha.reset(recaptchaWidgetId);

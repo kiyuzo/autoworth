@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY || '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'; // Test key for development
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY || '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
 
     const verificationResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',
