@@ -37,13 +37,12 @@ The application is organized into the following key sections:
 
 ## 🛠️ Technology Stack
 
-- **Frontend:** Next.js with TypeScript
+- **Frontend:** Next.js with TypeScript, Tailwind CSS, and ESlint
+- **Backend:** Node.JS and Flask/Python
 - **Database:** PostgreSQL (Neon)
-- **Authentication:** Firebase
 - **AI/ML:** Python with scikit-learn
-- **Deployment:** Vercel
+- **Authentication:** Firebase
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Database Setup
 
@@ -55,6 +54,7 @@ Make sure to set up your `.env.local` file with the following variables:
 
 ```bash
 DATABASE_URL=your_neon_connection_string
+
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
@@ -63,36 +63,78 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
 ```
+and also the pickle model with excact file name: `model.pkl`
 
 ## Getting Started
 
-First, install the dependencies:
+First, install the dependencies on the root folder and API folder:
 
 ```bash
 npm install
-# or
-yarn install
-# or
-pnpm install
+cd /api/
+npm install
 ```
 
-Then, run the development server:
+Second, install the requirements to run the model :
 
 ```bash
+cd /api/
+pip install -r requirements.txt
+```
+
+Then, don't forget to put the `.env.local` file in the root folder and `model.pkl` file in the /api/ folder. Here is how the files suppose to be structured:
+autoworth/
+├── .env.local                    ← .env.local file here
+├── .gitignore
+├── eslint.config.mjs
+├── next-env.d.ts
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── README.md
+├── tsconfig.json
+├── .next/
+├── api/
+│   ├── .gitignore
+│   ├── app.py
+│   ├── carPrediction.ts
+│   ├── model.pkl               ← model.pkl file here
+│   ├── package.json
+│   ├── requirements.txt
+│   ├── server.js
+│   ├── predict/
+│   └── scripts/
+├── app/
+├── components/
+├── contexts/
+├── lib/
+└── public/
+
+Finally, run the development servers:
+
+```bash
+#For python
+cd /api/
+venv/Scripts/activate
+python app.py
+
+#add a new terminal
+
+#for node
+cd /api/
+node server.js
+
+#add new terminal
+
+#for next.js
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev 
+
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Database Population
 
@@ -101,6 +143,8 @@ To populate the database with car data, run:
 ```bash
 npx ts-node api/scripts/populate-database.ts
 ```
+
+P.S This step isn't necessary unless you want to use your own database
 
 ## 👥 Development Team
 
@@ -116,27 +160,8 @@ npx ts-node api/scripts/populate-database.ts
 
 </div>
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
----
-
 <div align="center">
 
-**Made with ❤️ by the Autoworth Team**
-
-*Transforming car valuation through AI innovation*
+**Made with ❤️ and ☕ by our Team**
 
 </div>
